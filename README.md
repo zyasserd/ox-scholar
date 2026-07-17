@@ -71,6 +71,7 @@ Example usage:
     "content/bibliography.bib",
     title: "References",
   ),
+  word-count: true
 )
 
 #include "content/section01.typ"
@@ -100,14 +101,17 @@ the thesis styling. The `section()` function accepts:
 | `body`    | `content`         | The section content | — |
 | `draft`   | `bool`            | Show line numbers when compiled standalone | `false` |
 | `bib`     | `content \| none` | Bibliography for resolving citations when compiled standalone (ignored when included) | `none` |
-| `number`  | `int`             | Heading number to start from when compiled standalone, so it matches the section's position in the thesis (ignored when included) | `1` |
+| `quote`   | `dictionary \| none` | Optional epigraph displayed at the start of the chapter; a dict with `quote` (text) and optionally `author` keys | `none` |
 
 For example, a chapter that is the third in the thesis and cites sources:
 ```typ
 #import "@preview/ox-scholar:0.2.1": section
 #show: section.with(
-  number: 3,
-  bib: bibliography("bibliography.bib", title: "References"),
+  bib: bibliography("bibliography.bib"),
+  quote: (
+    quote: "... ἔοικα γοῦν τούτου γε σμικρῷ τινι αὐτῷ τούτῳ σοφώτερος εἶναι, ὅτι ἃ μὴ οἶδα οὐδὲ οἴομαι εἰδέναι.",
+    author: "Plato"
+  )
 )
 
 = Third Chapter
