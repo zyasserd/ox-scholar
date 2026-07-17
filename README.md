@@ -18,7 +18,7 @@ To get started with Typst, please refer to the official [installation guide](htt
 
 Once the Typst CLI is installed on your system, you can set up a new project using this template:
 ```shell
-typst init @preview/ox-scholar:0.2.0
+typst init @preview/ox-scholar:0.2.1
 ```
 
 The template includes a pre-filled example demonstrating the basic layout. You can compile it to PDF with:
@@ -50,10 +50,12 @@ The template provides a `thesis()` function that generates the thesis layout. Yo
 | `show-toc` | `bool`            | Whether to show the table of contents | `true` |
 | `bib`      | `content \| none` | Content for the bibliography | `none` |
 | `draft`    | `bool`            | Whether to show line numbers | `false` |
+| `word-count` | `bool`          | Whether to show the body word count on the title page | `false` |
+| `word-count-exclude` | `array` | Elements excluded from the word count (see [Word count](#word-count)) | Oxford's rules |
 
 Example usage:
 ```typ
-#import "@preview/ox-scholar:0.2.0": *
+#import "@preview/ox-scholar:0.2.1": *
 
 #show: thesis.with(
   title: "Thesis Title",
@@ -73,6 +75,79 @@ Example usage:
 
 #include "content/section01.typ"
 ```
+
+## Splitting the Thesis into Files
+For longer theses it is convenient to keep each chapter in its own file and
+`#include` them from `main.typ`. The `section()` wrapper lets such a file be
+compiled on its own — with the full thesis styling — while staying plain when
+included in the main document (where `thesis()` already provides the styling).
+
+Add this to the top of a chapter file:
+```typ
+#import "@preview/ox-scholar:0.2.1": section
+#show: section
+
+= My Chapter
+...
+```
+
+Compiled on its own, the file gets the thesis page layout, fonts, headers and
+heading styling. Included from `main.typ`, it is emitted unchanged and inherits
+the thesis styling. The `section()` function accepts:
+
+| Parameter | Type              | Description | Default |
+|-----------|-------------------|-------------|---------|
+| `body`    | `content`         | The section content | — |
+| `draft`   | `bool`            | Show line numbers when compiled standalone | `false` |
+| `bib`     | `content \| none` | Bibliography for resolving citations when compiled standalone (ignored when included) | `none` |
+| `number`  | `int`             | Heading number to start from when compiled standalone, so it matches the section's position in the thesis (ignored when included) | `1` |
+
+For example, a chapter that is the third in the thesis and cites sources:
+```typ
+#import "@preview/ox-scholar:0.2.1": section
+#show: section.with(
+  number: 3,
+  bib: bibliography("bibliography.bib", title: "References"),
+)
+
+= Third Chapter
+...
+```
+
+## Word count
+Setting `word-count: true` on `thesis()` prints the word count of the main body
+on the title page. The count follows the University of Oxford's
+[guidance](https://www.ox.ac.uk/) on what to include and exclude: it counts the
+preface, footnotes, appendices, captions, headings and narrative text, and
+excludes the table of contents, equations and symbols, diagrams, tables,
+bibliography, computer program text, running headers, and the acknowledgements
+(which live outside the counted body).
+
+```typ
+#show: thesis.with(
+  title: "Thesis Title",
+  author: "Author",
+  word-count: true,
+  ...
+)
+```
+
+The exclusion set can be overridden per document with `word-count-exclude`,
+which accepts the same values as
+[wordometer](https://typst.app/universe/package/wordometer)'s `exclude`
+option (element functions, names, `where`-selectors or labels). For example, to
+also exclude inline code:
+```typ
+#show: thesis.with(
+  word-count: true,
+  word-count-exclude: ("figure-body", table, outline, raw),
+  ...
+)
+```
+
+The word count depends on the
+[wordometer](https://typst.app/universe/package/wordometer) package, which is
+resolved automatically.
 
 ## Disclaimer
 This template was developed after the submission of the author’s thesis. The author does not guarantee that a thesis prepared using this template will be accepted by the University of Oxford. However, the template is designed to conform to the University’s prescribed formatting and styling requirements.

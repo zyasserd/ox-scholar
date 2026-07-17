@@ -1,4 +1,4 @@
-#import "@preview/ox-scholar:0.2.0": *
+#import "@preview/ox-scholar:0.2.1": *
 
 #show: thesis.with(
   title: "Thesis Title",
@@ -14,6 +14,7 @@
     "content/bibliography.bib",
     title: "References",
   ),
+  word-count: true
 )
 
 #include "content/section01.typ"

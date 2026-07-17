@@ -1,3 +1,5 @@
+#import "@preview/wordometer:0.1.5": total-words
+
 #let title-page(
   title: none,
   author: none,
@@ -5,6 +7,7 @@
   degree: "Doctor of Philosophy",
   submission-term: none,
   logo: none,
+  word-count: false,
 ) = {
   // Validate inputs
   assert(title != none, message: "Thesis title must be provided")
@@ -23,7 +26,9 @@
 
   let author-block = block[
     #text(author-size, author) \
-    #text(college) \
+    // Only emit the college line (and its line break) when a college
+    // is provided, so no blank line is left behind otherwise.
+    #if college != none [ #text(college) \ ]
     University of Oxford
   ]
 
@@ -32,6 +37,12 @@
     #emph(degree)
     #v(0.4cm)
     #text(submission-term)
+  ]
+
+  // Optional word-count line, shown below the degree block.
+  let word-count-block = block[
+    #set text(size: 12pt)
+    Word count: #context total-words
   ]
 
   // Title page style settings
@@ -57,4 +68,7 @@
   }
   place(center + horizon, author-block, dy: 3.2cm)
   place(center + bottom, degree-block, dy: -3cm)
+  if word-count {
+    place(center + bottom, word-count-block, dy: -1.2cm)
+  }
 }
