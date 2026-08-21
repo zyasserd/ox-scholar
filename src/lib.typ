@@ -301,7 +301,7 @@
     outline(
       title: "Contents",
       indent: 2em,
-      depth: 3,
+      depth: 2,
     )
     pagebreak(weak: true, to: "odd")
   }
