@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+- feat!: `show-toc` is replaced by `toc`, a dictionary whose keys are forwarded to `outline()`; `toc: none` omits the contents page, `toc: (:)` keeps the defaults
+- feat: `chapter-toc` adds a per-chapter contents list under each numbered chapter heading, listing that chapter's sub-headings only
+- feat: both accept a `style` hook, a content-to-content function applied to the finished contents in the shape of a show rule
+- feat: `section()` accepts `chapter-toc` for standalone compilation
+
 ## v0.2.1
 - feat: optional word count on the title page, following the CS Department's counting rules (`word-count`)
 - feat: customisable word-count exclusion set (`word-count-exclude`)
