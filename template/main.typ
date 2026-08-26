@@ -9,7 +9,7 @@
   acknowledgements: include "content/acknowledgements.typ",
   abstract: include "content/abstract.typ",
   logo: image("assets/beltcrest.png", width: 4.5cm),
-  show-toc: true,
+  toc: (:),
   bib: bibliography(
     "content/bibliography.bib",
     title: "References",

@@ -1,7 +1,7 @@
 #import "title.typ": title-page
 #import "frontmatter.typ": frontmatter-page
 #import "bibliography.typ": bibliography-page
-#import "utils.typ": make-footer, make-header
+#import "utils.typ": chapter-outline, make-footer, make-header
 #import "@preview/wordometer:0.1.5": word-count as wordometer-count
 
 
@@ -48,6 +48,38 @@
   // raw.where(block: true),
 )
 
+// Defaults for the document-wide table of contents. A caller overrides
+// individual keys by passing `toc: (depth: 3)`; keys left out fall back
+// to these. `toc: none` suppresses the contents page entirely.
+//
+// `style` is the one visual hook: a content-to-content function applied
+// to the finished contents, in the shape of a show rule.
+//
+//   toc: (depth: 2, style: it => { set text(size: 10pt); it })
+//
+// It is applied inside the template's own styling, so its `set` rules
+// are the nearer ones and win. Every other key is forwarded to
+// `outline()` itself, which is where `title`, `indent` and `depth` go —
+// so the whole `outline` API, `fill` and `target` included, is reachable.
+#let TOC_DEFAULTS = (
+  title: "Contents",
+  indent: 2em,
+  depth: 3,
+  style: it => it,
+)
+
+// Defaults for the per-chapter table of contents. Same override
+// convention as TOC_DEFAULTS, via the `chapter-toc` argument. Here every
+// key is consumed by `chapter-outline`, which builds the list by hand,
+// so none of them reach `outline()`.
+#let CHAPTER_TOC_DEFAULTS = (
+  title: none,
+  depth: 2,
+  indent: 1.5em,
+  gap: 0.5em,
+  style: it => it,
+)
+
 // State marker set while inside `thesis()`. A standalone `section()`
 // checks this to decide whether to apply the full page/text styling
 // itself (when compiled alone) or stay bare (when `include`d into the
@@ -72,7 +104,13 @@
 
 /// Shared document styling used by both the full thesis and standalone
 /// section files. Applied as a show rule: `#show: thesis-styles.with(..)`.
-#let thesis-styles(draft: false, body) = {
+///
+/// - draft (bool): Show line numbers.
+/// - chapter-toc (none | dictionary): When not `none`, every numbered
+///   level-1 heading is followed by a contents list for that chapter alone.
+///   Pass `(:)` for the defaults, or override keys of
+///   `CHAPTER_TOC_DEFAULTS`, e.g. `(depth: 3, title: [In this chapter])`.
+#let thesis-styles(draft: false, chapter-toc: none, body) = {
   set page(
     paper: "a4",
     margin: (
@@ -164,6 +202,11 @@
     }
     text(size: 24pt, weight: 100)[#it.body]
     v(1em)
+
+    // Per-chapter contents, listing this chapter's sub-headings.
+    if chapter-toc != none and it.numbering != none {
+      chapter-outline(CHAPTER_TOC_DEFAULTS + chapter-toc)
+    }
   }
 
   body
@@ -193,7 +236,11 @@
 ///
 /// - draft (bool): Show line numbers when compiled standalone.
 /// - bib (content): Optional bibliography for standalone compilation.
-#let section(draft: false, quote: none, bib: none, body) = context {
+/// - chapter-toc (none | dictionary): Per-chapter contents list, for
+///   standalone compilation only. Inside the thesis the document-wide
+///   setting on `thesis()` governs, and this argument is ignored — as
+///   `draft` and `bib` already are.
+#let section(draft: false, quote: none, bib: none, chapter-toc: none, body) = context {
   chapter-quote.update(quote)
 
   if _in-thesis.get() {
@@ -211,7 +258,7 @@
   } else {
     // Compiled standalone: apply the shared styling and number pages.
     set page(numbering: "1")
-    show: thesis-styles.with(draft: draft)
+    show: thesis-styles.with(draft: draft, chapter-toc: chapter-toc)
     body
     // Resolve any citations against a local bibliography if provided.
     if bib != none { bib }
@@ -228,7 +275,8 @@
   acknowledgements: none,
   abstract: none,
   logo: none,
-  show-toc: true,
+  toc: (:),
+  chapter-toc: none,
   bib: none,
   draft: false,
   word-count: false,
@@ -257,7 +305,7 @@
   }
 
   // Apply the shared document styling.
-  show: thesis-styles.with(draft: draft)
+  show: thesis-styles.with(draft: draft, chapter-toc: chapter-toc)
 
   // If word counting is enabled, count the main body (see below) and
   // wrap it so wordometer's global `total-words` state is populated.
@@ -297,12 +345,11 @@
   }
 
   // Table of contents
-  if show-toc {
-    outline(
-      title: "Contents",
-      indent: 2em,
-      depth: 2,
-    )
+  if toc != none {
+    let args = TOC_DEFAULTS + toc
+    // Pulled out so it is not forwarded to `outline()` as an argument.
+    let style = args.remove("style")
+    style(outline(..args))
     pagebreak(weak: true, to: "odd")
   }
 
