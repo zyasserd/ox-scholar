@@ -5,6 +5,9 @@
 - feat: `chapter-toc` adds a per-chapter contents list under each numbered chapter heading, listing that chapter's sub-headings only
 - feat: both accept a `style` hook, a content-to-content function applied to the finished contents in the shape of a show rule
 - feat: `section()` accepts `chapter-toc` for standalone compilation
+- feat: `counted()` counts the body of a function that renders it behind a `context` or `layout`, which the word count cannot otherwise see into — theorion's theorem environments, marginalia's `wideblock`. Without it such a body contributes nothing, silently
+- fix: block `raw` is now excluded from the word count, as the CS Department's rules on computer program text and the README both already claimed. **Documents with fenced code blocks will report a lower figure than before**
+- docs: the word count section covers what the walk cannot see, and states that the front matter (`abstract`, `acknowledgements`) is outside the counted body
 
 ## v0.2.1
 - feat: optional word count on the title page, following the CS Department's counting rules (`word-count`)
