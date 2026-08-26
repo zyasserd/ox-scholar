@@ -28,10 +28,9 @@
 // - Algorithm pseudocode if it is part of the text/ narrative
 // - Text from a mathematical proof
 //
-// Elements excluded from the word count to match the University of
-// Equations, symbols, images/diagrams, citations and the bibliography
-// are already excluded by wordometer's defaults, so this set
-// adds the remaining cases:
+// Equations, symbols, images/diagrams, citations and the bibliography are
+// already excluded by wordometer's defaults; `bibliography` is repeated below
+// only to keep the set readable on its own. This set adds the remaining cases:
 //   - "figure-body": drops the contents of figures (diagrams, tables,
 //     images, algorithm pseudocode inside a figure) while KEEPING their
 //     captions, which Oxford counts.
@@ -44,9 +43,43 @@
   "figure-body",
   table,
   outline,
-  bibliography
-  // raw.where(block: true),
+  bibliography,
+  raw.where(block: true),
 )
+
+/// Make the word count see inside a function that hides its argument.
+///
+/// wordometer counts by walking the content tree, and the walk cannot descend
+/// past a `context` or `layout` node. A package that renders its argument
+/// behind one — theorion's theorem environments, marginalia's `wideblock` —
+/// therefore contributes nothing to the count, silently. Wrapping the function
+/// counts its argument at the call site, where the content is still concrete:
+///
+/// ```typ
+/// #import "@preview/theorion:0.6.0": *
+/// #let definition = counted(definition)
+/// #let proof = counted(proof)
+/// ```
+///
+/// Only the last positional argument is counted, which for these packages is
+/// the body; a leading title argument is visible to the walk already and would
+/// be counted twice. The count is folded into that argument rather than placed
+/// beside it, so the wrapped call still returns a single element and a label
+/// written after it binds as before.
+///
+/// - f (function): The function to wrap.
+/// - exclude (array): Exclusion set for the counted argument, matching the
+///   document's `word-count-exclude` so the same rules apply inside and out.
+#let counted(f, exclude: OXFORD_WORD_COUNT_EXCLUDE) = (..args) => {
+  let pos = args.pos()
+  let body = pos.at(-1, default: none)
+  if type(body) != content { return f(..args) }
+  f(
+    ..pos.slice(0, -1),
+    wordometer-count(body, exclude: exclude),
+    ..args.named(),
+  )
+}
 
 // Defaults for the document-wide table of contents. A caller overrides
 // individual keys by passing `toc: (depth: 3)`; keys left out fall back

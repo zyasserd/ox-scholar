@@ -190,8 +190,11 @@ on the title page. The count follows the University of Oxford's
 [guidance](https://www.ox.ac.uk/) on what to include and exclude: it counts the
 preface, footnotes, appendices, captions, headings and narrative text, and
 excludes the table of contents, equations and symbols, diagrams, tables,
-bibliography, computer program text, running headers, and the acknowledgements
-(which live outside the counted body).
+bibliography, computer program text and running headers.
+
+Only the main body is counted. The front matter is not, so the `abstract` and
+`acknowledgements` passed to `thesis()` do not contribute to the printed figure
+— check your department's rules on whether they should, since practice varies.
 
 ```typ
 #show: thesis.with(
@@ -218,6 +221,42 @@ also exclude inline code:
 The word count depends on the
 [wordometer](https://typst.app/universe/package/wordometer) package, which is
 resolved automatically.
+
+### Caveat: content the count cannot see
+
+**Treat the printed figure as an estimate, and check it before you submit.**
+wordometer counts by walking the content tree, and the walk cannot descend past
+a `context` or `layout` node. Any package that renders its argument behind one
+contributes nothing to the count, and does so silently — there is no warning,
+the words simply are not there. Theorem environments are the common case: with
+[theorion](https://typst.app/universe/package/theorion), the environment's
+title is counted and its whole body is not.
+
+Wrap such a function in `counted` to count its argument at the call site, where
+the content is still concrete:
+
+```typ
+#import "@preview/ox-scholar:0.2.1": counted
+#import "@preview/theorion:0.6.0": *
+
+#let definition = counted(definition)
+#let theorem = counted(theorem)
+#let proof = counted(proof)
+```
+
+`counted` counts the last positional argument only, which for these packages is
+the body; a leading title argument is already visible to the walk and would
+otherwise be counted twice. The wrapped call still returns a single element, so
+a label written after it binds as before. Pass `exclude:` if the document
+overrides `word-count-exclude`, so the same rules apply inside and out.
+
+Two things to watch. The `#let` must come *after* the wildcard import it
+shadows, or it binds nothing and is then overwritten. And rebind names one by
+one rather than mapping over everything a package exports: theorion and
+marginalia both export `note`, so a blanket wrap will quietly swap one for the
+other. Wrapping only the environments a document actually uses is enough, but
+note that reaching for an unwrapped one later loses its body from the count
+with no warning — which is the failure this whole section is about.
 
 ## Disclaimer
 This template was developed after the submission of the author’s thesis. The author does not guarantee that a thesis prepared using this template will be accepted by the University of Oxford. However, the template is designed to conform to the University’s prescribed formatting and styling requirements.
